@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//mysql://root:N@gu10#ç01@localhost:3306/habits_schedule
+//jdbc:mysql://localhost/bancocrud?useTimezone=true&serverTimezone=UTC
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Habit {
+  id         Int             @id @default(autoincrement())
+  title      String          @db.VarChar(400)
+  created_at DateTime        @default(now())
+  user_id    Int
+  dayHabits  DayHabit[]
+  weekDays   HabitWeekDays[]
+
+  users Users @relation(fields: [user_id], references: [id])
+
+  @@map("habits")
+}
+
+model HabitWeekDays {
+  id       Int @id @default(autoincrement())
+  habit_id Int
+  week_day Int
+
+  habit Habit @relation(fields: [habit_id], references: [id])
+
+  @@unique([habit_id, week_day])
+  @@map("habit_week_days")
+}
+
+model Day {
+  id        Int        @id @default(autoincrement())
+  date      DateTime
+  user_id   Int
+  dayHabits DayHabit[]
+
+  users Users @relation(fields: [user_id], references: [id])
+
+  @@unique([date, user_id])
+  @@map("days")
+}
+
+model DayHabit {
+  id       Int @id @default(autoincrement())
+  day_id   Int
+  habit_id Int
+
+  day   Day   @relation(fields: [day_id], references: [id])
+  habit Habit @relation(fields: [habit_id], references: [id])
+
+  @@unique([day_id, habit_id])
+  @@map("day_habits")
+}
+
+model Users {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(300)
+  email      String   @db.VarChar(120)
+  password   String   @db.VarChar(300)
+  created_at DateTime @default(now())
+  Habit      Habit[]
+  Day        Day[]
+
+  @@map("users")
+}
